@@ -110,6 +110,45 @@ Below the my mapping configuration file for Xsession-Pro.
 
 ```
 
+### 2.5. LED Toggle Button Support (Optional 5th Column)
+
+Some MIDI controllers have toggle buttons with LED feedback. These buttons behave differently from momentary buttons:
+- **Momentary buttons**: Send 127 when pressed down, 0 when released
+- **LED toggle buttons**: Send 127 when first pressed (toggle ON), then 0 when pressed again (toggle OFF), with no release events
+
+For games that only accept momentary button presses (like Star Citizen), you can map the ON and OFF states to two separate vJoy buttons using an optional 5th column:
+
+```
+m_type  m_control  v_id  v_number  v_number_zero
+```
+
+Where:
+- **v_number** (4th column): The vJoy button to press when MIDI value = 127 (toggle ON)
+- **v_number_zero** (5th column): The vJoy button to press when MIDI value = 0 (toggle OFF)
+
+When the 5th column is present:
+- **MIDI value 127**: Sends a momentary press (127 then 0) to the button specified in the 4th column
+- **MIDI value 0**: Sends a momentary press (127 then 0) to the button specified in the 5th column
+- **MIDI values 1-126**: Passed through normally (for sliders/knobs)
+
+**Example configuration with LED toggle buttons:**
+
+```
+# Normal momentary button (4 columns)
+144  46   1  1       # Button press -> vJoy 1, Button 1
+
+# LED toggle button (5 columns)
+176  20   1  2  3    # Toggle ON (127) -> vJoy 1, Button 2
+                     # Toggle OFF (0) -> vJoy 1, Button 3
+
+# Normal slider (4 columns, unaffected)
+176  12   1  Z       # Slider -> vJoy 1, Z axis
+```
+
+**Backward Compatibility**: Existing 4-column configuration files work without changes. The 5th column is completely optional.
+
+### 2.6. Running midi2vjoy
+
 Once you have the configuration file, just run "midi2vjoy -m midi -c conf" to enjoy.
 
 In my case, I will run:

@@ -55,9 +55,24 @@ def read_conf(conf_file):
 			fs = l.split()
 			key = (int(fs[0]), int(fs[1]))
 			if fs[0] == '144':
-				val = (int(fs[2]), int(fs[3]))
+				# NOTE-ON: button mapping
+				if len(fs) >= 5:
+					# LED toggle button: 5th column specifies button for "off" state
+					val = (int(fs[2]), int(fs[3]), int(fs[4]))
+				else:
+					val = (int(fs[2]), int(fs[3]))
 			else:
-				val = (int(fs[2]), fs[3])
+				# CC or other: may be axis or button
+				if len(fs) >= 5:
+					# LED toggle button: 5th column specifies button for "off" state
+					# Try to parse as int (button), fall back to string (axis)
+					try:
+						val = (int(fs[2]), int(fs[3]), int(fs[4]))
+					except ValueError:
+						# fs[3] is axis name, no toggle support
+						val = (int(fs[2]), fs[3])
+				else:
+					val = (int(fs[2]), fs[3])
 			table[key] = val
 			vid = int(fs[2])
 			if not vid in vids:
@@ -153,10 +168,31 @@ def joystick_run():
 					# Note: We did not check if that axis is defined in vJoy
 					if not opt[1] in axis:
 						# A button input
-						vjoy.SetBtn(reading, opt[0], int(opt[1]))
-						print('Button value sent')
-						previous_key = opt[0]
-						previous_vjoy_device = opt[1]
+						# Check if this is an LED toggle button (has 5th column)
+						if len(opt) >= 3 and (reading == 0 or reading == 127):
+							# LED toggle button logic
+							if reading == 127:
+								# Toggle ON: send momentary press to "on" button (4th column)
+								btn_id = opt[1]
+								vjoy.SetBtn(127, int(btn_id), int(opt[0]))
+								time.sleep(0.01)  # Brief delay between press and release
+								vjoy.SetBtn(0, int(btn_id), int(opt[0]))
+								print('LED toggle ON: momentary press to button', btn_id)
+							elif reading == 0:
+								# Toggle OFF: send momentary press to "off" button (5th column)
+								btn_id = opt[2]
+								vjoy.SetBtn(127, int(btn_id), int(opt[0]))
+								time.sleep(0.01)  # Brief delay between press and release
+								vjoy.SetBtn(0, int(btn_id), int(opt[0]))
+								print('LED toggle OFF: momentary press to button', btn_id)
+							previous_key = None  # Don't track toggle buttons
+							previous_vjoy_device = None
+						else:
+							# Normal button or intermediate value: use existing behavior
+							vjoy.SetBtn(reading, int(opt[1]), int(opt[0]))
+							print('Button value sent')
+							previous_key = opt[1]
+							previous_vjoy_device = opt[0]
 					elif opt[1] in axis:
 						# An Axis Input
 						reading = (reading + 1) << 8
