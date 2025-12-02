@@ -110,39 +110,63 @@ Below the my mapping configuration file for Xsession-Pro.
 
 ```
 
-### 2.5. LED Toggle Button Support (Optional 5th Column)
+### 2.5. Advanced Button Support (Optional 5th Column)
+
+The optional 5th column enables support for two special button types that require converting discrete MIDI values into momentary button presses.
+
+#### 2.5.1. LED Toggle Buttons
 
 Some MIDI controllers have toggle buttons with LED feedback. These buttons behave differently from momentary buttons:
 - **Momentary buttons**: Send 127 when pressed down, 0 when released
 - **LED toggle buttons**: Send 127 when first pressed (toggle ON), then 0 when pressed again (toggle OFF), with no release events
 
-For games that only accept momentary button presses (like Star Citizen), you can map the ON and OFF states to two separate vJoy buttons using an optional 5th column:
+#### 2.5.2. Incremental Stepper Knobs
+
+Some MIDI controllers have incremental encoder knobs without minimum/maximum limits:
+- **Regular knobs**: Send continuous values 0-127 representing position
+- **Stepper knobs**: Send discrete values based on rotation direction
+  - **Value 63**: Turned counterclockwise (CCW)
+  - **Value 65**: Turned clockwise (CW)
+- These knobs have tactile "steps" and can rotate indefinitely in either direction
+
+#### 2.5.3. Configuration Format
+
+For games that only accept momentary button presses (like Star Citizen), you can map these special controls to two separate vJoy buttons using an optional 5th column:
 
 ```
 m_type  m_control  v_id  v_number  v_number_zero
 ```
 
-Where:
-- **v_number** (4th column): The vJoy button to press when MIDI value = 127 (toggle ON)
-- **v_number_zero** (5th column): The vJoy button to press when MIDI value = 0 (toggle OFF)
+**The code automatically detects the control type based on MIDI values:**
 
-When the 5th column is present:
-- **MIDI value 127**: Sends a momentary press (127 then 0) to the button specified in the 4th column
-- **MIDI value 0**: Sends a momentary press (127 then 0) to the button specified in the 5th column
-- **MIDI values 1-126**: Passed through normally (for sliders/knobs)
+**LED Toggle Buttons** (works with CC 176 or NOTE-ON 144):
+- **v_number** (4th column): vJoy button for MIDI value 127 (toggle ON)
+- **v_number_zero** (5th column): vJoy button for MIDI value 0 (toggle OFF)
 
-**Example configuration with LED toggle buttons:**
+**Stepper Knobs** (works with CC 176 only):
+- **v_number** (4th column): vJoy button for MIDI value 63 (counterclockwise)
+- **v_number_zero** (5th column): vJoy button for MIDI value 65 (clockwise)
+
+**Behavior:**
+- Each discrete MIDI value triggers a momentary press (127 then 0) to the appropriate vJoy button
+- MIDI values 1-62 and 66-126 are passed through normally (for regular sliders/knobs)
+
+#### 2.5.4. Example Configuration
 
 ```
 # Normal momentary button (4 columns)
-144  46   1  1       # Button press -> vJoy 1, Button 1
+144  46   1  1         # Button press -> vJoy 1, Button 1
 
 # LED toggle button (5 columns)
-176  20   1  2  3    # Toggle ON (127) -> vJoy 1, Button 2
-                     # Toggle OFF (0) -> vJoy 1, Button 3
+176  20   1  2  3      # Value 127 (ON)  -> vJoy 1, Button 2
+                       # Value 0   (OFF) -> vJoy 1, Button 3
+
+# Stepper knob (5 columns)
+176  30   1  10  11    # Value 63 (CCW) -> vJoy 1, Button 10
+                       # Value 65 (CW)  -> vJoy 1, Button 11
 
 # Normal slider (4 columns, unaffected)
-176  12   1  Z       # Slider -> vJoy 1, Z axis
+176  12   1  Z         # Slider -> vJoy 1, Z axis
 ```
 
 **Backward Compatibility**: Existing 4-column configuration files work without changes. The 5th column is completely optional.

@@ -168,24 +168,38 @@ def joystick_run():
 					# Note: We did not check if that axis is defined in vJoy
 					if not opt[1] in axis:
 						# A button input
-						# Check if this is an LED toggle button (has 5th column)
-						if len(opt) >= 3 and (reading == 0 or reading == 127):
-							# LED toggle button logic
+						# Check if this is an LED toggle button or stepper knob (has 5th column)
+						if len(opt) >= 3 and (reading == 0 or reading == 127 or reading == 63 or reading == 65):
+							# LED toggle button or stepper knob logic
 							if reading == 127:
-								# Toggle ON: send momentary press to "on" button (4th column)
+								# LED toggle ON: send momentary press to "on" button (4th column)
 								btn_id = opt[1]
 								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
 								time.sleep(0.01)  # Brief delay between press and release
 								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
 								print('LED toggle ON: momentary press to button', btn_id)
 							elif reading == 0:
-								# Toggle OFF: send momentary press to "off" button (5th column)
+								# LED toggle OFF: send momentary press to "off" button (5th column)
 								btn_id = opt[2]
 								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
 								time.sleep(0.01)  # Brief delay between press and release
 								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
 								print('LED toggle OFF: momentary press to button', btn_id)
-							previous_key = None  # Don't track toggle buttons
+							elif reading == 63 and key[0] == 176:
+								# Stepper knob CCW: send momentary press to CCW button (4th column)
+								btn_id = opt[1]
+								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
+								time.sleep(0.01)  # Brief delay between press and release
+								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
+								print('Stepper knob CCW: momentary press to button', btn_id)
+							elif reading == 65 and key[0] == 176:
+								# Stepper knob CW: send momentary press to CW button (5th column)
+								btn_id = opt[2]
+								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
+								time.sleep(0.01)  # Brief delay between press and release
+								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
+								print('Stepper knob CW: momentary press to button', btn_id)
+							previous_key = None  # Don't track toggle buttons or stepper knobs
 							previous_vjoy_device = None
 						else:
 							# Normal button or intermediate value: use existing behavior
