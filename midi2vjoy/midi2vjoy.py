@@ -174,22 +174,22 @@ def joystick_run():
 							if reading == 127:
 								# Toggle ON: send momentary press to "on" button (4th column)
 								btn_id = opt[1]
-								vjoy.SetBtn(127, int(btn_id), int(opt[0]))
+								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
 								time.sleep(0.01)  # Brief delay between press and release
-								vjoy.SetBtn(0, int(btn_id), int(opt[0]))
+								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
 								print('LED toggle ON: momentary press to button', btn_id)
 							elif reading == 0:
 								# Toggle OFF: send momentary press to "off" button (5th column)
 								btn_id = opt[2]
-								vjoy.SetBtn(127, int(btn_id), int(opt[0]))
+								vjoy.SetBtn(127, int(opt[0]), int(btn_id))
 								time.sleep(0.01)  # Brief delay between press and release
-								vjoy.SetBtn(0, int(btn_id), int(opt[0]))
+								vjoy.SetBtn(0, int(opt[0]), int(btn_id))
 								print('LED toggle OFF: momentary press to button', btn_id)
 							previous_key = None  # Don't track toggle buttons
 							previous_vjoy_device = None
 						else:
 							# Normal button or intermediate value: use existing behavior
-							vjoy.SetBtn(reading, int(opt[1]), int(opt[0]))
+							vjoy.SetBtn(reading, opt[0], int(opt[1]))
 							print('Button value sent')
 							previous_key = opt[1]
 							previous_vjoy_device = opt[0]
